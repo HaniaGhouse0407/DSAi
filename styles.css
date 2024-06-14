@@ -15,20 +15,7 @@ body {
     background-size: cover;
     opacity: 0.5; /* Adjust opacity as needed */
 }
-/* 
-/* Background container for the logo */
-.background-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1; /* Send the background container to the back */
-    background-image: url('logo.jpeg'); /* Set the background image */
-    background-size: cover; /* Cover the entire background */
-    background-position: center; /* Center the background image */
-    filter: blur(5px); /* Apply a blur effect */
-} */
+
 
 /* Heading style */
 .stethai-heading {
