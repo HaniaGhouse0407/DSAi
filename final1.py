@@ -1,5 +1,5 @@
 import streamlit as st
-import pyaudio
+import sounddevice as sd
 import wave
 import os
 
@@ -28,8 +28,6 @@ def front_page():
     if st.button("Start"):
         st.session_state.page = 'home'
         st.experimental_rerun()
-
-# Run the navigate function to render the correct page
 
 # Page navigation
 def navigate_page():
@@ -173,49 +171,17 @@ def about_us_page():
     if st.button("← Back"):
         st.session_state.page = 'home'
         st.experimental_rerun()
-def record_audio(filename, duration=15, chunk=1024, channels=1, rate=41100):
-    # Initialize PyAudio
-    audio = pyaudio.PyAudio()
-
-    # Open a new stream
-    stream = audio.open(format=pyaudio.paInt16,
-                        channels=channels,
-                        rate=rate,
-                        input=True,
-                        frames_per_buffer=chunk)
-
-    frames = []
-
+def record_audio(filename, duration=15, channels=1, rate=44100):
     print("Recording...")
-
-    # Read data in chunks
-    for i in range(int(rate / chunk * duration)):
-        data = stream.read(chunk)
-        frames.append(data)
-
+    audio_data = sd.rec(int(duration * rate), samplerate=rate, channels=channels, dtype='int16')
+    sd.wait()  # Wait until the recording is finished
     print("Recording finished.")
-
-    # Stop and close the stream
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-
-    # Convert frames to numpy array for normalization
-    audio_data = np.frombuffer(b''.join(frames), dtype=np.int16)
-
+    
     # Normalize the audio data
     audio_data = normalize_audio(audio_data)
-
-    # Convert numpy array back to bytes
-    frames = audio_data.tobytes()
-
+    
     # Save the recorded audio to a file
-    wf = wave.open(filename, 'wb')
-    wf.setnchannels(channels)
-    wf.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
-    wf.setframerate(rate)
-    wf.writeframes(frames)
-    wf.close()
+    wav.write(filename, rate, audio_data)
 
 def normalize_audio(audio_data):
     # Normalize audio to the range of int16
