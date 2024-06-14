@@ -11,6 +11,7 @@ def ca(uploaded_file, organ_choice, is_real_time):
         "AS": "Aortic stenosis",
         "MS": "Mitral stenosis",
         "MR": "Mitral regurgitation",
+        "MVR": "Mitral valve regurgitation",
         "recording1": "Bronchiectasis",
         "recording2": "Chronic Obstructive Pulmonary Disease",
         "recording3": "Mitral stenosis"
