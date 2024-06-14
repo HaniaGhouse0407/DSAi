@@ -1,6 +1,5 @@
 import streamlit as st
-import pyaudio
-import wave
+from st_audiorec import st_audiorec
 import os
 import time
 import smtplib
@@ -53,7 +52,6 @@ def navigate_page():
     elif st.session_state.page == 'recording':
         recording_page()
 
-
 # Home Page
 def home_page():
     st.title("Welcome to StethAI")
@@ -101,7 +99,7 @@ def lung_page():
     st.title("Lung Monitoring Instructions")
     st.write("1. Connect the digital stethoscope to your device.")
     st.write("2. Position the stethoscope as shown in the diagram below.")
-    st.image("lung_positions.png")  # Add the path to the image file
+    st.image("lung_positions.png")
     if st.button("Done"):
         st.session_state.page = 'recording'
         st.session_state.recording_mode = 'lungs'
@@ -117,15 +115,14 @@ def recording_page():
     st.title("Recording Page")
     st.write("Click the 'Start Recording' or 'Upload Recording' button and wait until the screen generates a result. Once the result is generated, you can click the 'Send Report' button to email the report.")
 
-    # Handle Start Recording Button
-    if st.button("Start Recording"):
-        filename = "recording.wav"
-        record_audio(filename)
-        with open(filename, "rb") as f:
-            audio_bytes = f.read()
-        st.audio(audio_bytes, format='audio/wav')
-        st.session_state.filename = filename
-
+    # Handle real-time recording using st_audiorec
+    wav_audio_data = st_audiorec()
+    if wav_audio_data:
+        st.audio(wav_audio_data, format='audio/wav')
+        st.session_state.filename = "recording.wav"
+        with open(st.session_state.filename, "wb") as f:
+            f.write(wav_audio_data)
+        
     # Handle Upload Button
     uploaded_file = st.file_uploader("Upload a Recording")
     if uploaded_file is not None:
@@ -171,25 +168,6 @@ def about_us_page():
     if st.button("← Back"):
         st.session_state.page = 'home'
         st.experimental_rerun()
-def record_audio(filename, duration=15, chunk=1024, channels=1, rate=44100):
-    audio = pyaudio.PyAudio()
-    stream = audio.open(format=pyaudio.paInt16, channels=channels, rate=rate, input=True, frames_per_buffer=chunk)
-    frames = []
-
-    for i in range(int(rate / chunk * duration)):
-        data = stream.read(chunk)
-        frames.append(data)
-
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-
-    wf = wave.open(filename, 'wb')
-    wf.setnchannels(channels)
-    wf.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
-    wf.setframerate(rate)
-    wf.writeframes(b''.join(frames))
-    wf.close()
 
 # Send email function
 def send_report(sender_email, app_password, recipient_email, audio_filename):
@@ -238,7 +216,6 @@ def classify_audio(uploaded_file, organ_choice, is_real_time):
             if normalized_condition in filename:
                 return condition
         return "Other"
-
 
 # Run the navigate function to render the correct page
 navigate_page()
