@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "digital_stethoscope"
+version = "0.1.0"
+description = ""Our digital stethoscope offers an innovative way to monitor heart and lung sounds."
+
+[tool.poetry.dependencies]
+python = ">=3.6,<=3.7.16"
+streamlit = ">=1.2.0"
+tensorflow = ">=1.15.4,<2.0"
+librosa = "*"
+numpy = "*"
+noisereduce = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+
+[[tool.poetry.source]]
+name = "default"
+url = "https://pypi.org/simple"
+secondary = false
