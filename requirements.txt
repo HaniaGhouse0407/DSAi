@@ -1,4 +1,7 @@
 streamlit-audiorec
+librosa
+noisereduce
+tensorflow
 Wave
 secure-smtplib
 numpy
