@@ -89,7 +89,7 @@ def heart_page():
     st.write("1. Connect the digital stethoscope to your device.")
     st.write("2. Position the stethoscope as shown in the diagram below.")
     st.image("heart_positions.jpg")
-    if st.button("Done"):
+    if st.button("Next"):
         st.session_state.page = 'recording'
         st.session_state.recording_mode = 'heart'
         st.experimental_rerun()
@@ -104,7 +104,7 @@ def lung_page():
     st.write("1. Connect the digital stethoscope to your device.")
     st.write("2. Position the stethoscope as shown in the diagram below.")
     st.image("lung_positions.png")
-    if st.button("Done"):
+    if st.button("Next"):
         st.session_state.page = 'recording'
         st.session_state.recording_mode = 'lungs'
         st.experimental_rerun()
