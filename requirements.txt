@@ -1,5 +1,4 @@
-pyaudio
-sounddevice
+streamlit-audiorec
 Wave
 secure-smtplib
 numpy
