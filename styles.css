@@ -1,6 +1,7 @@
 /* styles.css */
 body {
-    background-color: #e6f7ff; /* Light blue background */
+    background-color: #e0f7fa; /* Light sky blue background color */
+    font-family: Arial, sans-serif; /* Example font family */
 }
 
 .background-container {
@@ -10,7 +11,9 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background-color: #e6f7ff; /* This should match body background color */
+    background-image: url('logo.jpeg'); /* Replace with your background image path */
+    background-size: cover;
+    opacity: 0.5; /* Adjust opacity as needed */
 }
 /* 
 /* Background container for the logo */
