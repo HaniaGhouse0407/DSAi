@@ -1,12 +1,9 @@
 import streamlit as st
 import pyaudio
-import sounddevice as sd
 import wave
 import os
-
 import time
 import smtplib
-import numpy as np
 import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -29,6 +26,8 @@ def front_page():
     if st.button("Start"):
         st.session_state.page = 'home'
         st.experimental_rerun()
+
+# Run the navigate function to render the correct page
 
 # Page navigation
 def navigate_page():
@@ -172,33 +171,25 @@ def about_us_page():
     if st.button("← Back"):
         st.session_state.page = 'home'
         st.experimental_rerun()
-def record_audio(filename, duration=15, channels=1, rate=44100):
-    print("Recording...")
-    audio_data = sd.rec(int(duration * rate), samplerate=rate, channels=channels, dtype='int16')
-    sd.wait()  # Wait until the recording is finished
-    print("Recording finished.")
-    
-    # Normalize the audio data
-    audio_data = normalize_audio(audio_data)
-    
-    # Save the recorded audio to a file
-    wav.write(filename, rate, audio_data)
+def record_audio(filename, duration=15, chunk=1024, channels=1, rate=44100):
+    audio = pyaudio.PyAudio()
+    stream = audio.open(format=pyaudio.paInt16, channels=channels, rate=rate, input=True, frames_per_buffer=chunk)
+    frames = []
 
-def normalize_audio(audio_data):
-    # Normalize audio to the range of int16
-    max_val = np.iinfo(np.int16).max
-    min_val = np.iinfo(np.int16).min
+    for i in range(int(rate / chunk * duration)):
+        data = stream.read(chunk)
+        frames.append(data)
 
-    max_audio = max(abs(audio_data.max()), abs(audio_data.min()))
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
 
-    # Avoid division by zero
-    if max_audio == 0:
-        return audio_data
-
-    scaling_factor = max_val / max_audio
-
-    normalized_audio = np.clip(audio_data * scaling_factor, min_val, max_val).astype(np.int16)
-    return normalized_audio
+    wf = wave.open(filename, 'wb')
+    wf.setnchannels(channels)
+    wf.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
+    wf.setframerate(rate)
+    wf.writeframes(b''.join(frames))
+    wf.close()
 
 # Send email function
 def send_report(sender_email, app_password, recipient_email, audio_filename):
