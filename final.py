@@ -14,7 +14,10 @@ from email.mime.text import MIMEText
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"s
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+gru_model = load_model("diagnosis_GRU_CNN_1.h5")
+model_path = 'final_saved.h5'
+hrt_model = load_model(model_path)
 
 # Define the local_css function
 def local_css(file_name):
@@ -113,7 +116,6 @@ def lung_page():
 from ac import ca
 
 def predict_class(audio_file_path, features=52, soundDir=''):
-    gru_model = load_model("diagnosis_GRU_CNN_1.h5")
     val = []
     classes = ["Healthy", "Bronchiectasis", "COPD", "Upper Respiratory Tract Infection", "Pneumonia", "Other"] 
     data_x, sampling_rate = librosa.load(audio_file_path + soundDir, res_type='kaiser_fast')
