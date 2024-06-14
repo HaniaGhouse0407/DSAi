@@ -1,0 +1,5 @@
+PyAudio
+Wave
+secure-smtplib
+numpy
+email-to
