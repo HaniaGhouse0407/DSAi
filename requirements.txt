@@ -1,4 +1,4 @@
-PyAudio
+sounddevice
 Wave
 secure-smtplib
 numpy
