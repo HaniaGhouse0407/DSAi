@@ -1,4 +1,5 @@
 import streamlit as st
+import pyaudio
 import sounddevice as sd
 import wave
 import os
