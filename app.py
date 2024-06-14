@@ -14,7 +14,7 @@ from email.mime.text import MIMEText
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"s
 
 # Define the local_css function
 def local_css(file_name):
