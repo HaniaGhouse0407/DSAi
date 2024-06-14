@@ -15,7 +15,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-# gru_model = load_model("diagnosis_GRU_CNN_1.h5")
+gru_model = load_model("cnn_gru.h5")
 model_path = 'final_saved.h5'
 hrt_model = load_model(model_path)
 
