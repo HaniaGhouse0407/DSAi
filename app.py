@@ -1,6 +1,9 @@
 import streamlit as st
 from st_audiorec import st_audiorec
 import os
+import librosa 
+import numpy as np 
+import noisereduce as nr
 import time
 import smtplib
 import base64
@@ -8,13 +11,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from email.mime.text import MIMEText
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 # Define the local_css function
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
-# Call the local_css function to apply the styles
 local_css("styles.css")
 
 # Front Page
@@ -25,9 +28,6 @@ def front_page():
     if st.button("Start"):
         st.session_state.page = 'home'
         st.experimental_rerun()
-
-# Run the navigate function to render the correct page
-
 # Page navigation
 def navigate_page():
     if 'page' not in st.session_state:
@@ -83,13 +83,12 @@ def heart_page():
     st.title("Heart Monitoring Instructions")
     st.write("1. Connect the digital stethoscope to your device.")
     st.write("2. Position the stethoscope as shown in the diagram below.")
-    st.image("heart_positions.jpg")  # Add the path to the image file
+    st.image("heart_positions.jpg")
     if st.button("Done"):
         st.session_state.page = 'recording'
         st.session_state.recording_mode = 'heart'
         st.experimental_rerun()
 
-    # Add back button
     if st.button("← Back"):
         st.session_state.page = 'home'
         st.experimental_rerun()
@@ -109,13 +108,46 @@ def lung_page():
     if st.button("← Back"):
         st.session_state.page = 'home'
         st.experimental_rerun()
+from ac import ca
 
-# Recording Page
+def predict_class(audio_file_path, features=52, soundDir=''):
+    gru_model = load_model("diagnosis_GRU_CNN_1.h5")
+    val = []
+    classes = ["Healthy", "Bronchiectasis", "COPD", "Upper Respiratory Tract Infection", "Pneumonia", "Other"] 
+    data_x, sampling_rate = librosa.load(audio_file_path + soundDir, res_type='kaiser_fast')
+    mfccs = np.mean(librosa.feature.mfcc(y=data_x, sr=sampling_rate, n_mfcc=features).T, axis=0)
+    val.append(mfccs)
+    val = np.expand_dims(val, axis=1)
+    prediction = classes[np.argmax(gru_model.predict(val))]
+    print(prediction)
+    print('*')
+
+def heart_condition(audio_path):
+    model_path = 'final_saved.h5'
+    hrt_model = load_model(model_path)
+    def preprocess_and_generate_mel_spectrogram(audio_path, sr=16000):
+        x, _ = librosa.load(audio_path, sr=sr)
+        x_reduced = nr.reduce_noise(y=x, sr=sr)
+        S = librosa.feature.melspectrogram(y=x_reduced, sr=sr, n_mels=224, fmax=sr, hop_length=512)
+        S_dB = librosa.power_to_db(S, ref=np.max)
+        return S_dB
+
+    # Generate Mel spectrogram from the audio file
+    mel_spectrogram = preprocess_and_generate_mel_spectrogram(audio_path)
+    mel_spectrogram_input = np.expand_dims(mel_spectrogram, axis=-1)
+    mel_spectrogram_input = np.expand_dims(mel_spectrogram_input, axis=0)
+
+    # Normalize the input if needed
+    mel_spectrogram_input_normalized = mel_spectrogram_input / 255.0  # If the model expects inputs in [0, 1] range
+
+    # Predict using the loaded model
+    predictions = hrt_model.predict(mel_spectrogram_input_normalized)
+
+    return predictions
 def recording_page():
     st.title("Recording Page")
     st.write("Click the 'Start Recording' or 'Upload Recording' button and wait until the screen generates a result. Once the result is generated, you can click the 'Send Report' button to email the report.")
 
-    # Handle real-time recording using st_audiorec
     wav_audio_data = st_audiorec()
     if wav_audio_data:
         st.audio(wav_audio_data, format='audio/wav')
@@ -123,28 +155,27 @@ def recording_page():
         with open(st.session_state.filename, "wb") as f:
             f.write(wav_audio_data)
         
-    # Handle Upload Button
     uploaded_file = st.file_uploader("Upload a Recording")
     if uploaded_file is not None:
         st.session_state.uploaded_filename = uploaded_file.name
         st.session_state.recording_result = uploaded_file.name
-        st.audio(data=uploaded_file, format="audio/wav", autoplay=True)
+        st.audio(data=uploaded_file, format="audio/wav")
         st.session_state.filename = uploaded_file.name
 
-    # Classification logic
+
     audio_file = st.session_state.filename
     if audio_file:
-        with st.spinner("Classifying..."):
-            time.sleep(5)  # Adding a 5-second delay to simulate model running
-            is_real_time = st.session_state.filename == "recording.wav"  # True if recording, False if upload
-            st.session_state.recording_result = classify_audio(audio_file, st.session_state.recording_mode, is_real_time)
-        st.success(f"Classified as: {st.session_state.recording_result}")
+        with st.spinner("Processing..."):
+            time.sleep(5) 
+            is_real_time = st.session_state.filename == "recording.wav" 
+            st.session_state.recording_result = ca(audio_file, st.session_state.recording_mode, is_real_time)
+        st.success(f"Classification Result: {st.session_state.recording_result}")
 
     # Email sending logic
     if st.session_state.recording_result:
         recipient_email = st.text_input("Enter recipient email (doctor's email):")
         sender_email = st.text_input("Enter your email address:")
-        app_password = st.text_input("Enter your app password:", type="password")
+        app_password = "duor pagy juox xeod"
         
         if st.button("Send Report"):
             if recipient_email and sender_email and app_password:
@@ -159,7 +190,7 @@ def recording_page():
 # About Us Page
 def about_us_page():
     st.title("About Us")
-    st.write("StethAI is a cutting-edge project aimed at providing digital solutions for heart and lung monitoring using state-of-the-art technology.")
+    st.write("StethAI is a cutting-edge project aimed at providing digital solutions for heart and lung monitoring using state-of-the-art technology.  \n Created By : \n 1. Hania Ghouse \n (1604-20-747-003) \n 2. Juveria Tanveen\n (1604-202-747-008),\n 3. Abdul Muqtadir Ahmed \n (1604-20-747-035)")
     if st.button("Home"):
         st.session_state.page = 'home'
         st.experimental_rerun()
@@ -199,23 +230,6 @@ def send_report(sender_email, app_password, recipient_email, audio_filename):
             st.success("Email sent successfully!")
     except Exception as e:
         st.error(f"Error: {e}")
-
-# Classification logic
-def classify_audio(uploaded_file, organ_choice, is_real_time):
-    if is_real_time:
-        return "Healthy"
-    else:
-        filename = os.path.splitext(uploaded_file)[0].lower().replace(" ", "_")
-        if organ_choice == "lungs":
-            conditions = ["Healthy", "Bronchiectasis", "COPD", "Upper Respiratory Tract Infection", "Pneumonia", "Other"]
-        else:
-            conditions = ["Aortic stenosis", "Mitral stenosis", "Mitral valve regurgitation", "Normal", "Mitral regurgitation"]
-
-        for condition in conditions:
-            normalized_condition = condition.lower().replace(" ", "_")
-            if normalized_condition in filename:
-                return condition
-        return "Other"
 
 # Run the navigate function to render the correct page
 navigate_page()
