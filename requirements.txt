@@ -1,8 +1,6 @@
-streamlit-audiorec
-librosa
-noisereduce
+streamlit
 tensorflow
-Wave
-secure-smtplib
+librosa
 numpy
-email-to
+scipy
+soundfile
